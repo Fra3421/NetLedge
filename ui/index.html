@@ -1,0 +1,600 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<title>NetLedge</title>
+<link rel="stylesheet" href="lib/katex/katex.min.css">
+<style>
+:root{--bg:#1e1e1e;--side:#262626;--line:#363636;--txt:#dcddde;--mut:#8a8b8d;--acc:#7c6cf0;--danger:#e05561;--hover:#2f2f2f}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--txt);font:14px/1.45 "Segoe UI",system-ui,sans-serif;display:flex;overflow:hidden}
+button{font:inherit;color:inherit;background:var(--hover);border:1px solid var(--line);border-radius:6px;padding:5px 10px;cursor:pointer}
+button:hover:not(:disabled){border-color:var(--acc)}
+button:disabled{opacity:.4;cursor:not-allowed}
+button.primary{background:var(--acc);border-color:var(--acc);color:#fff}
+button.danger{background:var(--danger);border-color:var(--danger);color:#fff}
+#side{width:260px;flex:none;background:var(--side);border-right:1px solid var(--line);display:flex;flex-direction:column;transition:margin .15s}
+#side.hidden{margin-left:-261px}
+.head{display:flex;align-items:center;justify-content:space-between;padding:12px 12px 8px}
+.head h2{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);margin:0}
+#list{list-style:none;margin:0;padding:4px 6px;overflow:auto;flex:1}
+#list li{padding:6px 10px;border-radius:6px;cursor:pointer;display:flex;gap:8px;align-items:center;user-select:none}
+#list li::before{content:"◆";font-size:9px;color:var(--mut)}
+#list li:hover{background:var(--hover)}
+#list li.active{background:rgba(124,108,240,.18);color:#fff}
+#list li.active::before{color:var(--acc)}
+#main{flex:1;display:flex;flex-direction:column;min-width:0}
+#bar{display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid var(--line)}
+#content{flex:1;display:flex;min-height:0;position:relative}
+#cy{flex:1;min-width:0}
+#hint{position:absolute;left:0;right:0;top:45%;text-align:center;color:var(--mut);pointer-events:none;display:none}
+#panel{width:330px;flex:none;border-left:4px solid var(--line);background:var(--side);padding:14px;overflow:auto;display:none}
+#panel h3{margin:0}
+#panel h4{margin:14px 0 6px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--mut)}
+.mut{color:var(--mut)}
+textarea{width:100%;min-height:56px;resize:vertical;background:var(--bg);color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:6px 8px;font:inherit;margin-top:8px}
+.note{width:100%;background:var(--bg);color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:4px 8px;font:inherit;margin-top:3px}
+.prop{margin-bottom:8px}
+.prop i{color:var(--mut);font-style:normal}
+.lnk{color:#b0a6ff;cursor:pointer}
+.x{color:var(--danger);cursor:pointer;margin-left:6px}
+.addp{display:flex;gap:6px;margin:10px 0 16px}
+.addp input{flex:1;min-width:0}
+#panel select,#box select,.addp input{background:var(--bg);color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:4px 6px;font:inherit}
+#tip{position:fixed;display:none;pointer-events:none;background:var(--side);border:1px solid var(--line);border-radius:8px;padding:8px 10px;z-index:15;font-size:12px;max-width:260px}
+#tip i{color:var(--mut);font-style:normal}
+#legend{position:absolute;left:12px;bottom:12px;background:var(--side);border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:12px;pointer-events:none;display:none;max-height:40%;overflow:hidden}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px}
+#nbd{margin:12px 0;max-height:35vh;overflow:auto}
+#nbd summary{cursor:pointer;color:var(--mut);font-size:12px;letter-spacing:.06em;text-transform:uppercase}
+.nbc{margin:8px 0 2px}
+.nbi{padding-left:15px}
+.nbi i{color:var(--mut);font-style:normal}
+.seg{display:flex}
+.seg button{border-radius:0}
+.seg button:first-child{border-radius:6px 0 0 6px}
+.seg button:last-child{border-radius:0 6px 6px 0}
+.seg button.on{background:var(--acc);border-color:var(--acc);color:#fff}
+#bs,#bd{display:flex;gap:10px;align-items:center}
+#qbox{position:relative}
+#q{width:280px;padding:5px 9px;background:var(--bg);color:var(--txt);border:1px solid var(--line);border-radius:6px;font:inherit}
+#res{position:absolute;top:100%;left:0;margin-top:4px;width:440px;max-height:60vh;overflow:auto;background:var(--side);border:1px solid var(--line);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.4);z-index:12;display:none}
+.hit{padding:7px 10px;cursor:pointer;border-bottom:1px solid var(--line)}
+.hit:hover{background:var(--hover)}
+.sm{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chip{background:rgba(124,108,240,.2);color:#b0a6ff;border-radius:10px;padding:1px 8px;font-size:11px}
+.fld{margin:10px 0}
+.lbl{color:var(--mut);font-size:12px;margin-bottom:3px}
+.lbl i{font-style:normal;opacity:.7}
+.md{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:4px 10px;overflow-x:auto;word-break:break-word}
+.md p{margin:.45em 0}
+.md h1,.md h2,.md h3{margin:.6em 0 .3em}
+.md code{background:#2a2a2a;padding:1px 4px;border-radius:4px}
+.md pre{background:#2a2a2a;padding:8px;border-radius:6px;overflow:auto}
+.md a{color:#b0a6ff}
+.md blockquote{border-left:3px solid var(--line);margin:.4em 0;padding-left:10px;color:var(--mut)}
+#ed{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;z-index:25;padding:4vh 4vw}
+#edbox{background:var(--side);border:1px solid var(--line);border-radius:10px;height:100%;display:flex;flex-direction:column;padding:14px}
+#edbox .cols{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:12px;min-height:0;margin-top:10px}
+#edbox textarea{height:100%;min-height:0;resize:none;margin:0;font:13px/1.5 Consolas,monospace}
+#edbox .md{overflow:auto;padding:8px 14px}
+#menu{position:fixed;display:none;background:var(--side);border:1px solid var(--line);border-radius:8px;padding:4px;min-width:170px;box-shadow:0 8px 24px rgba(0,0,0,.4);z-index:10}
+#menu div{padding:6px 10px;border-radius:5px;cursor:pointer}
+#menu div:hover{background:var(--hover)}
+#menu .d{color:var(--danger)}
+#veil{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;place-items:center;z-index:20}
+#box{background:var(--side);border:1px solid var(--line);border-radius:10px;padding:18px;width:min(440px,90vw)}
+#box h3{margin:0 0 8px}
+#box input{width:100%;margin-top:10px;padding:7px 9px;background:var(--bg);color:var(--txt);border:1px solid var(--line);border-radius:6px;font:inherit}
+#box .row{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}
+dl{display:grid;grid-template-columns:auto 1fr;gap:4px 16px;margin:8px 0 0}
+dt{color:var(--mut)}
+dd{margin:0;word-break:break-all}
+#toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--danger);color:#fff;padding:8px 14px;border-radius:8px;display:none;z-index:30;max-width:80vw}
+</style>
+</head>
+<body>
+<aside id="side">
+  <div class="head"><h2>Database</h2><button id="add">+ Aggiungi</button></div>
+  <ul id="list"></ul>
+</aside>
+<div id="main">
+  <div id="bar"><button id="tog" title="Mostra/nascondi la barra laterale">☰</button><strong id="title"></strong><span class="seg"><button id="m-schema" class="on">Schema</button><button id="m-data">Dati</button></span><span style="flex:1"></span><span id="bs"><button id="addn">+ Categoria</button><button id="adde">+ Tipo di arco</button></span><span id="bd" style="display:none"><span id="qbox"><input id="q" placeholder="Cerca un nodo per nome…" autocomplete="off"><div id="res"></div></span><button id="addi">+ Nodo</button><button id="adda">+ Arco</button></span></div>
+  <div id="content"><div id="cy"></div><div id="hint">Schema vuoto: crea una categoria di nodi con «+ Categoria».</div><div id="legend"></div><aside id="panel"></aside></div>
+</div>
+<div id="menu"></div>
+<div id="veil"><div id="box"></div></div>
+<div id="toast"></div>
+<div id="tip"></div>
+<div id="ed"></div>
+<script src="lib/cytoscape.min.js"></script>
+<script src="lib/marked.umd.js"></script>
+<script src="lib/katex/katex.min.js"></script>
+
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let S = {names: [], active: null};
+
+function toast(msg) {
+  const t = $("toast");
+  t.textContent = msg;
+  t.style.display = "block";
+  setTimeout(() => t.style.display = "none", 4000);
+}
+
+// Chiama un metodo Python; aggiorna l'elenco se la risposta contiene lo stato.
+async function call(fn, ...args) {
+  const r = await pywebview.api[fn](...args);
+  if (!r.ok) { toast(r.error); return null; }
+  if (r.names) { S = r; render(); }
+  return r;
+}
+
+function render() {
+  const ul = $("list");
+  ul.innerHTML = "";
+  S.names.forEach(n => {
+    const li = document.createElement("li");
+    li.textContent = n;
+    if (n === S.active) li.className = "active";
+    li.onclick = () => { if (n !== S.active) call("open_database", n); };
+    li.oncontextmenu = e => { e.preventDefault(); showMenu(e.clientX, e.clientY, n); };
+    ul.appendChild(li);
+  });
+  $("title").textContent = S.active || "";
+  if (S.active !== shown) { shown = S.active; sel = null; pos = {}; foc = null; DETAIL = null; }
+  loadSchema();
+}
+
+// Finestra modale generica: restituisce il testo inserito, true, oppure null se annullata.
+function modal(o) {
+  return new Promise(done => {
+    const b = $("box"), v = $("veil");
+    b.innerHTML = `<h3>${esc(o.title)}</h3><div>${esc(o.text || "")}</div>${o.html || ""}`
+      + (o.input != null ? `<input id="inp" value="${esc(o.input)}" autocomplete="off">` : "")
+      + `<div class="row">${o.cancel === false ? "" : '<button id="no">Annulla</button>'}`
+      + `<button id="yes" class="${o.danger ? "danger" : "primary"}">${esc(o.ok || "OK")}</button></div>`;
+    v.style.display = "grid";
+    const inp = $("inp"), yes = $("yes");
+    const close = val => { v.style.display = "none"; done(val); };
+    if (o.match != null) { yes.disabled = true; inp.oninput = () => yes.disabled = inp.value !== o.match; }
+    yes.onclick = () => close(o.get ? o.get() : inp ? inp.value.trim() : true);
+    if ($("no")) $("no").onclick = () => close(null);
+    const f = b.querySelector("input,textarea"); if (f) { f.focus(); if (f.select) f.select(); } else yes.focus();
+    b.onkeydown = e => {
+      if (e.key === "Escape") close(null);
+      if (e.key === "Enter" && e.target.tagName !== "TEXTAREA" && !yes.disabled) yes.click();
+    };
+  });
+}
+
+const actions = {
+  async rename(n) {
+    const v = await modal({title: "Rinomina database", input: n, ok: "Rinomina"});
+    if (v && v !== n) call("rename_database", n, v);
+  },
+  async info(n) {
+    const r = await call("database_info", n);
+    if (!r) return;
+    const rows = Object.entries(r.info).map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("");
+    modal({title: "Proprietà", html: `<dl>${rows}</dl>`, ok: "Chiudi", cancel: false});
+  },
+  async del(n) {
+    const first = await modal({title: "Eliminare il database?", text: `Stai per eliminare «${n}» con tutti i suoi dati.`, ok: "Continua", danger: true});
+    if (!first) return;
+    const second = await modal({title: "Conferma definitiva", text: `L’operazione è irreversibile. Scrivi «${n}» per confermare.`, input: "", match: n, ok: "Elimina definitivamente", danger: true});
+    if (second) call("delete_database", n);
+  }
+};
+
+function showMenu(x, y, n) {
+  const m = $("menu");
+  m.innerHTML = '<div data-a="rename">Rinomina</div><div data-a="info">Proprietà</div><div data-a="del" class="d">Elimina…</div>';
+  m.style.display = "block";
+  m.style.left = Math.min(x, innerWidth - 190) + "px";
+  m.style.top = Math.min(y, innerHeight - 120) + "px";
+  m.onclick = e => { const a = e.target.dataset.a; if (a) actions[a](n); };
+}
+
+// ---------------------------- schema ---------------------------- //
+let SC = null, cy = null, sel = null, shown = null, pos = {};
+const TYPES = ["STRING", "INT64", "DOUBLE", "BOOL", "DATE", "TIMESTAMP"].map(t => `<option>${t}</option>`).join("");
+const pretty = s => s.replace(/_/g, " ").replace(/^./, c => c.toUpperCase());
+const gk = () => (sel.kind === "node" ? "nodes" : "edges");
+
+async function loadSchema() {
+  const r = await call("get_schema");
+  if (!r) return;
+  SC = r.schema;
+  if (mode === "data") return showSample();
+  if (sel && !SC[gk()][sel.name]) sel = null;
+  drawGraph();
+  showPanel();
+}
+
+function highlight() {
+  cy.elements().unselect();
+  if (!sel) return;
+  (sel.kind === "node" ? cy.getElementById(sel.name) : cy.edges().filter(x => x.data("rel") === sel.name)).select();
+}
+
+function pick(kind, name) {
+  sel = kind ? {kind, name} : null;
+  highlight();
+  showPanel();
+}
+
+function tip(e) {
+  const isN = e.target.isNode(), name = isN ? e.target.id() : e.target.data("rel");
+  const d = SC[isN ? "nodes" : "edges"][name], note = SC.notes[(isN ? "node:" : "edge:") + name];
+  const t = $("tip");
+  t.innerHTML = `<b>${esc(pretty(name))}</b>` + (note ? `<div><i>${esc(note)}</i></div>` : "")
+    + (d.props.length ? d.props.map(p => `<div>${esc(p.name)} <i>${esc(p.type)}</i></div>`).join("") : "<div><i>nessuna proprietà</i></div>");
+  t.style.left = e.originalEvent.clientX + 14 + "px";
+  t.style.top = e.originalEvent.clientY + 14 + "px";
+  t.style.display = "block";
+}
+
+function drawGraph() {
+  if (cy) { cy.nodes().forEach(n => { pos[n.id()] = n.position(); }); cy.destroy(); }
+  const els = Object.keys(SC.nodes).map(n => ({data: {id: n, label: pretty(n), color: hue(n)}, ...(pos[n] ? {position: pos[n]} : {})}));
+  for (const [e, d] of Object.entries(SC.edges))
+    d.pairs.forEach(([a, b]) => els.push({data: {id: `${e}:${a}>${b}`, source: a, target: b, label: pretty(e), rel: e}}));
+  $("hint").style.display = els.length ? "none" : "block";
+  setLegend(Object.keys(SC.nodes).map(n => [n, null]));
+  cy = cytoscape({
+    container: $("cy"), elements: els, wheelSensitivity: 0.3,
+    style: [
+      {selector: "node", style: {label: "data(label)", color: "#dcddde", "background-color": "data(color)", "text-valign": "bottom", "text-margin-y": 4, "font-size": 12, width: 26, height: 26}},
+      {selector: "edge", style: {label: "data(label)", color: "#8a8b8d", "font-size": 9, width: 1.5, "line-color": "#555", "target-arrow-color": "#555", "target-arrow-shape": "triangle", "curve-style": "bezier", "text-rotation": "autorotate", "text-background-color": "#1e1e1e", "text-background-opacity": 1, "text-background-padding": 2}},
+      {selector: ":selected", style: {"background-color": "#b0a6ff", "line-color": "#b0a6ff", "target-arrow-color": "#b0a6ff"}}
+    ],
+    layout: {name: "cose", animate: false, randomize: !Object.keys(pos).length, nodeRepulsion: () => 12000, idealEdgeLength: () => 120, padding: 40}
+  });
+  cy.on("tap", "node", e => pick("node", e.target.id()));
+  cy.on("tap", "edge", e => pick("edge", e.target.data("rel")));
+  cy.on("tap", e => { if (e.target === cy) pick(null); });
+  cy.on("mouseover", "node,edge", tip);
+  cy.on("mouseout", "node,edge", () => { $("tip").style.display = "none"; });
+  highlight();
+}
+
+function showPanel() {
+  const p = $("panel");
+  if (!sel) { p.style.display = "none"; if (cy) cy.resize(); return; }
+  const isN = sel.kind === "node", d = SC[gk()][sel.name], key = (isN ? "node:" : "edge:") + sel.name;
+  const nv = k => esc(SC.notes[k] || "");
+  const link = (k, n) => `<span class="lnk" data-go="${k}:${esc(n)}">${esc(pretty(n))}</span>`;
+  let h = `<h3>${esc(pretty(sel.name))}</h3><div class="mut">${isN ? "Categoria di nodi" : "Tipo di arco"}</div>`
+    + `<textarea class="note" data-k="${esc(key)}" placeholder="Nota facoltativa…">${nv(key)}</textarea>`;
+  if (isN) {
+    const rows = [];
+    for (const [e, ed] of Object.entries(SC.edges))
+      ed.pairs.forEach(([a, b]) => {
+        if (a === sel.name) rows.push(`<div>→ ${link("edge", e)} → ${link("node", b)}</div>`);
+        if (b === sel.name) rows.push(`<div>${link("node", a)} → ${link("edge", e)} →</div>`);
+      });
+    h += "<h4>Collegamenti</h4>" + (rows.join("") || '<div class="mut">nessuno</div>');
+  } else {
+    h += "<h4>Coppie</h4>" + d.pairs.map(([a, b]) => `<div>${link("node", a)} → ${link("node", b)}</div>`).join("")
+      + '<div class="addp"><input id="pf" list="cats" placeholder="Da"><input id="pt" list="cats" placeholder="A"><button id="pb">+</button></div>'
+      + `<datalist id="cats">${Object.keys(SC.nodes).map(n => `<option value="${esc(n)}">`).join("")}</datalist>`;
+  }
+  h += "<h4>Proprietà</h4>" + d.props.map(pr => {
+    const k = `${key}.${pr.name}`, locked = isN && (pr.name === "id" || pr.name === "nome");
+    return `<div class="prop"><div><b>${esc(pr.name)}</b> <i>${esc(pr.type)}</i>${pr.pk ? " 🔑" : ""}`
+      + (locked ? "" : `<span class="x" data-delp="${esc(pr.name)}" title="Elimina">✕</span>`)
+      + `</div><input class="note" data-k="${esc(k)}" value="${nv(k)}" placeholder="nota…"></div>`;
+  }).join("")
+    + `<div class="addp"><input id="np" placeholder="nuova proprietà"><select id="nt">${TYPES}</select><button id="npb">+</button></div>`
+    + `<button class="danger" id="delt">Elimina ${isN ? "categoria" : "tipo di arco"}…</button>`;
+  p.innerHTML = h;
+  p.style.display = "block";
+  if (cy) cy.resize();
+}
+
+$("panel").onchange = e => {
+  if (mode === "data") return dataChange(e);
+  const k = e.target.dataset.k;
+  if (!k) return;
+  const v = e.target.value.trim();
+  if (v) SC.notes[k] = v; else delete SC.notes[k];
+  call("schema_set_note", k, v);
+};
+
+$("panel").onclick = async e => {
+  if (mode === "data") return dataClick(e);
+  const t = e.target, d = t.dataset;
+  if (d.go) {
+    const [k, n] = d.go.split(":");
+    pick(k, n);
+  } else if (d.delp !== undefined) {
+    const ok = await modal({title: "Eliminare la proprietà?", text: `«${d.delp}» verrà rimossa da «${sel.name}» insieme ai suoi valori.`, ok: "Elimina", danger: true});
+    if (ok && await call("schema_drop_prop", sel.name, d.delp)) loadSchema();
+  } else if (t.id === "pb") {
+    const a = $("pf").value.trim(), b = $("pt").value.trim();
+    if (a && b && await call("schema_add_pair", sel.name, a, b)) loadSchema();
+  } else if (t.id === "npb") {
+    const p = $("np").value.trim();
+    if (p && await call("schema_add_prop", sel.name, p, $("nt").value)) loadSchema();
+  } else if (t.id === "delt") {
+    const n = sel.name;
+    const first = await modal({title: `Eliminare «${n}»?`, text: sel.kind === "node" ? "Tutti i nodi di questa categoria verranno eliminati." : "Tutti gli archi di questo tipo verranno eliminati.", ok: "Continua", danger: true});
+    if (!first) return;
+    const second = await modal({title: "Conferma definitiva", text: `L’operazione è irreversibile. Scrivi «${n}» per confermare.`, input: "", match: n, ok: "Elimina definitivamente", danger: true});
+    if (second && await call("schema_drop_table", n)) { sel = null; loadSchema(); }
+  }
+};
+
+$("addn").onclick = async () => {
+  const v = await modal({title: "Nuova categoria di nodi", text: "Avrà le proprietà id e nome; le altre le aggiungi dopo.", input: "", ok: "Crea"});
+  const r = v && await call("schema_add_node", v);
+  if (r) { sel = {kind: "node", name: r.name}; loadSchema(); }
+};
+
+$("adde").onclick = async () => {
+  const v = await modal({
+    title: "Nuovo tipo di arco", text: "Una coppia per riga, nel formato «Da > A».",
+    html: '<input id="en" placeholder="Nome (es. RICHIEDE)"><textarea id="pairs" placeholder="Risultato > Condizione"></textarea>',
+    ok: "Crea", get: () => ({name: $("en").value.trim(), pairs: $("pairs").value})
+  });
+  const r = v && await call("schema_add_edge", v.name, v.pairs);
+  if (r) { sel = {kind: "edge", name: r.name}; loadSchema(); }
+};
+
+// ---------------------------- dati ---------------------------- //
+let mode = "schema", foc = null, DETAIL = null, qt = null;
+const PAL = ["#7c6cf0", "#e0884f", "#4fb0a0", "#d9577b", "#6aa84f", "#c9a227", "#4f8fe0", "#a46bd1", "#e05561", "#58a6d6", "#b5c94a", "#d48fd0"];
+// Colore stabile: posizione della categoria nello schema (in mancanza, un hash del nome).
+const hue = c => {
+  const i = SC ? Object.keys(SC.nodes).indexOf(c) : -1;
+  return PAL[(i >= 0 ? i : [...c].reduce((a, ch) => a + ch.charCodeAt(0), 0)) % PAL.length];
+};
+function setLegend(items) {
+  const l = $("legend");
+  l.innerHTML = items.map(([c, n]) => `<div><span class="dot" style="background:${hue(c)}"></span>${esc(pretty(c))}${n != null ? ` <span class="mut">(${n})</span>` : ""}</div>`).join("");
+  l.style.display = items.length ? "block" : "none";
+}
+const key = (c, i) => `${c}:${i}`;
+const preview = p => Object.entries(p).filter(([, v]) => v != null && v !== "").slice(0, 3).map(([k, v]) => `${k}: ${String(v).replace(/\s+/g, " ").slice(0, 60)}`).join(" · ");
+
+marked.use({renderer: {html(t) { return esc(typeof t === "string" ? t : t.text); }}});
+
+// Markdown + LaTeX ($…$ in linea, $$…$$ a blocchi), tutto in locale.
+function renderMd(src) {
+  const math = [];
+  const t = src.replace(/\$\$([\s\S]+?)\$\$|\$(?!\s)([^\n$]+?)(?<!\s)\$/g, (m, d, i) => {
+    math.push([d !== undefined ? d : i, d !== undefined]);
+    return `@@M${math.length - 1}@@`;
+  });
+  const html = marked.parse(t, {breaks: true}).replace(/href="(?!https?:|mailto:|#)[^"]*"/g, 'href="#"');
+  return html.replace(/@@M(\d+)@@/g, (m, i) => katex.renderToString(math[i][0], {displayMode: math[i][1], throwOnError: false}));
+}
+
+function setMode(m) {
+  mode = m; sel = null; foc = null; DETAIL = null; pos = {};
+  if (cy) { cy.destroy(); cy = null; }
+  $("m-schema").classList.toggle("on", m === "schema");
+  $("m-data").classList.toggle("on", m === "data");
+  $("bs").style.display = m === "schema" ? "flex" : "none";
+  $("bd").style.display = m === "data" ? "flex" : "none";
+  $("panel").style.display = "none";
+  $("hint").textContent = m === "schema" ? "Schema vuoto: crea una categoria di nodi con «+ Categoria»." : "Nessun dato: crea un nodo con «+ Nodo».";
+  $("hint").style.display = "none";
+  loadSchema();
+  if (m === "data") call("warm_index");
+}
+$("m-schema").onclick = () => { if (mode !== "schema") setMode("schema"); };
+$("m-data").onclick = () => { if (mode !== "data") setMode("data"); };
+
+function drawData(g) {
+  if (cy) cy.destroy();
+  const els = g.nodes.map(n => ({data: {id: key(n.cat, n.id), label: n.nome, cat: n.cat, nid: n.id, dist: n.dist, color: hue(n.cat), center: key(n.cat, n.id) === g.center}}))
+    .concat(g.edges.map(e => ({data: {id: `${e.rel}|${e.src}|${e.dst}`, source: e.src, target: e.dst, label: pretty(e.rel), rel: e.rel}})));
+  $("hint").style.display = els.length ? "none" : "block";
+  const cnt = {};
+  g.nodes.forEach(n => { cnt[n.cat] = (cnt[n.cat] || 0) + 1; });
+  setLegend(Object.entries(cnt).sort());
+  cy = cytoscape({
+    container: $("cy"), elements: els, wheelSensitivity: 0.3,
+    style: [
+      {selector: "node", style: {label: "data(label)", color: "#dcddde", "background-color": "data(color)", "text-valign": "bottom", "text-margin-y": 4, "font-size": 11, width: 22, height: 22, "text-wrap": "ellipsis", "text-max-width": 110}},
+      {selector: "node[?center]", style: {width: 36, height: 36, "border-width": 3, "border-color": "#fff", "font-size": 13}},
+      {selector: "edge", style: {label: "data(label)", color: "#8a8b8d", "font-size": 9, width: 1.5, "line-color": "#555", "target-arrow-color": "#555", "target-arrow-shape": "triangle", "curve-style": "bezier", "text-rotation": "autorotate", "text-background-color": "#1e1e1e", "text-background-opacity": 1, "text-background-padding": 2}}
+    ],
+    layout: g.center
+      ? {name: "concentric", animate: false, concentric: n => 10 - n.data("dist"), levelWidth: () => 1, minNodeSpacing: 45, padding: 40}
+      : {name: "cose", animate: false, padding: 40, nodeRepulsion: () => 12000, idealEdgeLength: () => 110}
+  });
+  cy.on("tap", "node", e => focusNode(e.target.data("cat"), e.target.data("nid")));
+  cy.on("tap", "edge", e => {
+    const [sc, sid] = e.target.data("source").split(":"), [dc, did] = e.target.data("target").split(":");
+    showEdge(e.target.data("rel"), sc, sid, dc, did);
+  });
+}
+
+async function showSample() {
+  const r = await call("sample_graph", 25);
+  if (!r) return;
+  foc = null; DETAIL = null;
+  drawData(r.graph);
+  $("panel").style.display = "none";
+  cy.resize();
+}
+
+async function focusNode(cat, id) {
+  const g = await call("neighborhood", cat, id, 2, 60), d = await call("get_node_detail", cat, id);
+  if (!g || !d) return;
+  foc = {cat, id};
+  drawData(g.graph);
+  showNode(d);
+  $("res").style.display = "none";
+}
+
+const lbl = (k, t, extra = "") => `<div class="lbl">${esc(k)} <i>${esc(t)}</i>${extra}</div>`;
+
+function field(k, type, v) {
+  const t = type.toUpperCase(), a = `data-f="${esc(k)}"`;
+  if (t === "STRING")
+    return `<div class="fld">${lbl(k, t, ` · <span class="lnk" data-edit="${esc(k)}">Modifica</span>`)}<div class="md">${v ? renderMd(v) : '<span class="mut">vuoto</span>'}</div></div>`;
+  const inp = t === "BOOL"
+    ? `<select ${a}><option value="">—</option><option value="true"${v === true ? " selected" : ""}>Vero</option><option value="false"${v === false ? " selected" : ""}>Falso</option></select>`
+    : `<input ${a} class="note" type="${t === "DATE" ? "date" : t === "TIMESTAMP" ? "datetime-local" : "number"}" ${/INT/.test(t) ? "" : 'step="any"'} value="${v == null ? "" : esc(v)}">`;
+  return `<div class="fld">${lbl(k, t)}${inp}</div>`;
+}
+
+let nbOpen = true;
+function neighboursHtml(d) {
+  const nb = d.neighbours;
+  if (!nb.length) return '<div class="mut" style="margin:10px 0">Nessun nodo collegato.</div>';
+  const by = {};
+  nb.forEach(r => (by[r.categoria] = by[r.categoria] || []).push(r));
+  return `<details id="nbd"${nbOpen ? " open" : ""}><summary>Nodi vicini (${nb.length + d.more})</summary>`
+    + Object.keys(by).sort().map(c => `<div class="nbc"><span class="dot" style="background:${hue(c)}"></span>${esc(pretty(c))} <span class="mut">(${by[c].length})</span></div>`
+      + by[c].map(r => `<div class="nbi">${r.direzione === "out" ? "→" : "←"} <i>${esc(pretty(r.arco))}</i> <span class="lnk" data-focus="${esc(key(c, r.id))}">${esc(r.nome)}</span></div>`).join("")).join("")
+    + (d.more ? `<div class="mut">…e altri ${d.more}</div>` : "") + "</details>";
+}
+$("panel").addEventListener("toggle", e => { if (e.target.id === "nbd") nbOpen = e.target.open; }, true);
+
+function showNode(d) {
+  DETAIL = d;
+  const n = d.node, p = $("panel");
+  p.innerHTML = `<h3>${esc(n.nome)}</h3><div class="mut"><span class="chip">${esc(pretty(n.cat))}</span> ${esc(n.id)}</div>`
+    + neighboursHtml(d)
+    + Object.keys(d.types).filter(k => k !== "id" && k !== "nome").map(k => field(k, d.types[k], n.props[k])).join("")
+    + '<button class="danger" id="deln" style="margin-top:14px">Elimina nodo…</button>';
+  p.style.display = "block";
+  if (cy) cy.resize();
+}
+
+async function showEdge(rel, sc, sid, dc, did) {
+  const d = await call("get_edge_detail", rel, sc, sid, dc, did);
+  if (!d) return;
+  DETAIL = d;
+  const e = d.edge, p = $("panel");
+  p.innerHTML = `<h3>${esc(pretty(e.rel))}</h3><div><span class="lnk" data-focus="${esc(key(e.sc, e.sid))}">${esc(e.snome)}</span> → <span class="lnk" data-focus="${esc(key(e.dc, e.did))}">${esc(e.dnome)}</span></div>`
+    + (Object.keys(d.types).length ? Object.keys(d.types).map(k => field(k, d.types[k], e.props[k])).join("") : '<div class="mut" style="margin-top:10px">Nessuna proprietà.</div>')
+    + '<button class="danger" id="dele" style="margin-top:14px">Elimina arco…</button>';
+  p.style.display = "block";
+  if (cy) cy.resize();
+}
+
+async function save(k, v) {
+  const e = DETAIL.edge;
+  const r = e ? await call("update_edge", e.rel, e.sc, e.sid, e.dc, e.did, {[k]: v})
+              : await call("update_node", DETAIL.node.cat, DETAIL.node.id, {[k]: v});
+  if (!r) return;
+  if (e) return showEdge(e.rel, e.sc, e.sid, e.dc, e.did);
+  const d = await call("get_node_detail", DETAIL.node.cat, DETAIL.node.id);
+  if (d) showNode(d);
+}
+
+function dataChange(e) {
+  const f = e.target.dataset.f;
+  if (f) save(f, e.target.value);
+}
+
+async function dataClick(e) {
+  const t = e.target, d = t.dataset, edge = DETAIL && DETAIL.edge;
+  if (d.focus) { const [c, i] = d.focus.split(":"); focusNode(c, i); }
+  else if (d.edit !== undefined) {
+    const v = await editor(d.edit, (edge || DETAIL.node).props[d.edit] || "");
+    if (v !== null) save(d.edit, v);
+  } else if (t.id === "deln") {
+    const ok = await modal({title: "Eliminare il nodo?", text: `«${DETAIL.node.nome}» verrà eliminato insieme ai suoi archi.`, ok: "Elimina", danger: true});
+    if (ok && await call("delete_node", DETAIL.node.cat, DETAIL.node.id)) showSample();
+  } else if (t.id === "dele") {
+    const ok = await modal({title: "Eliminare l’arco?", text: `L’arco «${pretty(edge.rel)}» tra «${edge.snome}» e «${edge.dnome}» verrà eliminato.`, ok: "Elimina", danger: true});
+    if (ok && await call("delete_edge", edge.rel, edge.sc, edge.sid, edge.dc, edge.did)) foc ? focusNode(foc.cat, foc.id) : showSample();
+  }
+}
+
+// Editor a schermo intero: testo a sinistra, anteprima a destra.
+function editor(name, text) {
+  return new Promise(done => {
+    const w = $("ed");
+    w.innerHTML = `<div id="edbox"><div style="display:flex;gap:8px;align-items:center"><b style="flex:1">${esc(name)}</b>`
+      + '<span class="mut">Markdown · LaTeX: $…$ e $$…$$ · Ctrl+Invio per salvare</span><button id="edn">Annulla</button><button id="eds" class="primary">Salva</button></div>'
+      + '<div class="cols"><textarea id="edt" spellcheck="false"></textarea><div class="md" id="edp"></div></div></div>';
+    const t = $("edt"), p = $("edp");
+    t.value = text; p.innerHTML = renderMd(text);
+    w.style.display = "block"; t.focus();
+    let tm;
+    t.oninput = () => { clearTimeout(tm); tm = setTimeout(() => { p.innerHTML = renderMd(t.value); }, 150); };
+    const close = v => { w.style.display = "none"; w.innerHTML = ""; done(v); };
+    $("edn").onclick = () => close(null);
+    $("eds").onclick = () => close(t.value);
+    w.onkeydown = e => { if (e.key === "Escape") close(null); if (e.key === "Enter" && e.ctrlKey) close(t.value); };
+  });
+}
+
+async function runSearch() {
+  const text = $("q").value.trim(), box = $("res");
+  if (!text) { box.style.display = "none"; return; }
+  const r = await call("search_nodes", text, 12);
+  if (!r) return;
+  box.innerHTML = r.hits.length
+    ? r.hits.map(h => `<div class="hit" data-c="${esc(h.cat)}" data-i="${esc(h.id)}"><b>${esc(h.nome)}</b> <span class="chip">${esc(pretty(h.cat))}</span><div class="mut sm">${esc(preview(h.props))}</div></div>`).join("")
+    : '<div class="hit mut">Nessun risultato</div>';
+  box.style.display = "block";
+}
+$("q").oninput = () => { clearTimeout(qt); qt = setTimeout(runSearch, 250); };
+$("q").onkeydown = e => { if (e.key === "Enter") { const h = $("res").querySelector(".hit[data-c]"); if (h) h.click(); } };
+$("res").onclick = e => { const h = e.target.closest(".hit"); if (h && h.dataset.c) focusNode(h.dataset.c, h.dataset.i); };
+
+$("addi").onclick = async () => {
+  const cats = Object.keys(SC.nodes).map(c => `<option value="${esc(c)}">${esc(pretty(c))}</option>`).join("");
+  if (!cats) return toast("Crea prima una categoria nello schema.");
+  const v = await modal({title: "Nuova istanza di nodo", ok: "Crea", html: `<select id="nc" class="note">${cats}</select><input id="nn" placeholder="Nome della nozione">`, get: () => ({c: $("nc").value, n: $("nn").value.trim()})});
+  const r = v && await call("add_node", v.c, v.n);
+  if (r) focusNode(r.cat, r.id);
+};
+
+$("adda").onclick = async () => {
+  const opts = Object.entries(SC.edges).flatMap(([e, d]) => d.pairs.map(([a, b]) => `<option value="${esc(e)}|${esc(a)}|${esc(b)}">${esc(pretty(e))}: ${esc(pretty(a))} → ${esc(pretty(b))}</option>`)).join("");
+  if (!opts) return toast("Crea prima un tipo di arco nello schema.");
+  const from = DETAIL && DETAIL.node ? DETAIL.node.nome : "";
+  const v = await modal({title: "Nuova istanza di arco", ok: "Crea", html: `<select id="ae" class="note">${opts}</select><input id="as" placeholder="Nome del nodo di partenza" value="${esc(from)}"><input id="at" placeholder="Nome del nodo di arrivo">`, get: () => ({p: $("ae").value.split("|"), s: $("as").value.trim(), t: $("at").value.trim()})});
+  if (!v) return;
+  const r = await call("add_edge", v.p[0], v.p[1], v.s, v.p[2], v.t);
+  if (r) focusNode(r.cat, r.id);
+};
+
+(() => {
+  const p = $("panel");
+  try { const w = localStorage.getItem("panelW"); if (w) p.style.width = w + "px"; } catch (e) {}
+  const edge = e => e.clientX - p.getBoundingClientRect().left < 6;
+  p.addEventListener("mousemove", e => { p.style.cursor = edge(e) ? "col-resize" : ""; });
+  p.addEventListener("mousedown", e => {
+    if (!edge(e)) return;
+    e.preventDefault();
+    const box = $("content").getBoundingClientRect();
+    const move = ev => { p.style.width = Math.max(260, Math.min(box.right - ev.clientX, box.width * 0.75)) + "px"; if (cy) cy.resize(); };
+    const up = () => {
+      document.removeEventListener("mousemove", move);
+      document.removeEventListener("mouseup", up);
+      try { localStorage.setItem("panelW", parseInt(p.style.width)); } catch (e) {}
+    };
+    document.addEventListener("mousemove", move);
+    document.addEventListener("mouseup", up);
+  });
+})();
+
+document.addEventListener("click", e => {
+  $("menu").style.display = "none";
+  if (!e.target.closest("#qbox")) $("res").style.display = "none";
+  const a = e.target.closest(".md a");
+  if (a) { e.preventDefault(); const h = a.getAttribute("href"); if (/^(https?:|mailto:)/.test(h)) call("open_url", h); }
+});
+$("tog").onclick = () => $("side").classList.toggle("hidden");
+$("add").onclick = async () => {
+  const v = await modal({title: "Nuovo database", text: "Scegli un nome.", input: "", ok: "Crea"});
+  if (v) call("create_database", v);
+};
+
+window.addEventListener("pywebviewready", () => call("list_databases"));
+</script>
+</body>
+</html>
