@@ -1,14 +1,1 @@
-{
-  "matematica_1ab2f4": {
-    "node:autore.nascita": "Numero intero. Per anni appartenenti al periodo a.C. usare numeri negativi.",
-    "node:autore.morte": "Numero intero. Per anni appartenenti al periodo a.C. usare numeri negativi.",
-    "node:fonte.anno": "Numero intero. Per anni appartenenti al periodo a.C. usare numeri negativi.",
-    "node:risultato.stato": "Può essere solamente \"congettura\", \"dimostrato\" o \"confutato\".",
-    "node:problema.stato": "Può essere solamente \"aperto\", \"risolto\" o \"parzialmente risolto\".",
-    "edge:implica": "Arco da usare solamente per risultati banali o per implicazioni usate frequentemente (es: funzione continua implica funzione derivabile)",
-    "node:dimostrazione.metodo": "Può essere solamente \"diretta\", \"contronominale\", \"per assurdo\", \"per induzione\", \"per controesempio\"",
-    "edge:viola": "Utile soprattutto insieme a \"ha ipotesi\" per vedere i risultati che non valgono se si toglie una determinata ipotesi al risultato.",
-    "node:condizione": "Affermazioni semplici, spesso usate come ipotesi o tesi nei risultati (es: funzione continua, funzione derivabile una volta, ...)",
-    "edge:generalizza.vincolo": "Ciò che differenzia il generale dallo specifico (es: \"funzione\" generalizza \"funzione continua\" con vincolo \"continua su ogni punto del dominio\")"
-  }
-}
+{}
